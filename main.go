@@ -56,14 +56,14 @@ func getFirstDayMonth(date time.Time) time.Weekday {
 	return time.Date(year, month, 1, 0, 0, 0, 0, location).Weekday()
 }
 
-func formatDayNumber(day uint) (text string) {
+func formatDayNumber(day uint, date time.Time) (text string) {
 	// Convert to base 10
 	text = strconv.FormatUint(uint64(day), 10)
-	if day == uint(time.Now().Day()) {
-		text = ansi.Color(text, "black:white")
-	}
 	if utf8.RuneCountInString(text) < 2 {
 		text = " " + text
+	}
+	if day == uint(date.Day()) {
+		text = ansi.Color(text, "black:white")
 	}
 	return
 }
@@ -79,7 +79,7 @@ func printCalendar(date time.Time) {
 	}
 	var i uint = 1
 	for ; i <= lengthOfMonth(date); i++ {
-		fmt.Print(formatDayNumber(i))
+		fmt.Print(formatDayNumber(i, date))
 		fmt.Print(" ")
 		if (i+uint(firstDay))%7 == 0 {
 			fmt.Print("\n")

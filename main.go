@@ -3,10 +3,11 @@ package main
 import (
 	"errors"
 	"fmt"
-	"time"
-	"unicode/utf8"
-	"strconv"
 	"github.com/mgutz/ansi"
+	"strconv"
+	"time"
+	"os"
+	"unicode/utf8"
 )
 
 func isLeapYear(year int) (bool, error) {
@@ -25,9 +26,10 @@ func isLeapYear(year int) (bool, error) {
 	return true, nil
 }
 
-func lengthOfMonth(month time.Month) uint {
+func lengthOfMonth(date time.Time) uint {
+	month := date.Month()
 	if month == time.February {
-		leapYear, err := isLeapYear(time.Now().Year())
+		leapYear, err := isLeapYear(date.Year())
 		if err != nil {
 			panic(err)
 		}
@@ -47,10 +49,10 @@ func lengthOfMonth(month time.Month) uint {
 	return 30
 }
 
-func getFirstDayThisMonth() time.Weekday {
-	month := time.Now().Month()
-	year := time.Now().Year()
-	location := time.Now().Location()
+func getFirstDayMonth(date time.Time) time.Weekday {
+	month := date.Month()
+	year := date.Year()
+	location := date.Location()
 	return time.Date(year, month, 1, 0, 0, 0, 0, location).Weekday()
 }
 
@@ -66,26 +68,43 @@ func formatDayNumber(day uint) (text string) {
 	return
 }
 
-func printCalendar() {
-	firstDay := getFirstDayThisMonth()
+func printCalendar(date time.Time) {
+	firstDay := getFirstDayMonth(date)
 
-	fmt.Printf("  %v %v\n", time.Now().Month().String(), strconv.Itoa(time.Now().Year()))
+	fmt.Printf("  %v %v\n", date.Month().String(), strconv.Itoa(date.Year()))
 
 	fmt.Print("Su Mo Tu We Th Fr Sa\n")
 	for i := 0; i < 3*int(firstDay); i++ {
 		fmt.Print(" ")
 	}
 	var i uint = 1
-	for ; i <= lengthOfMonth(time.Now().Month()); i++ {
+	for ; i <= lengthOfMonth(date); i++ {
 		fmt.Print(formatDayNumber(i))
 		fmt.Print(" ")
-		if (i + uint(firstDay)) % 7 == 0 {
+		if (i+uint(firstDay))%7 == 0 {
 			fmt.Print("\n")
 		}
 	}
 	fmt.Print("\n")
 }
 
+func printUsage() {
+	fmt.Print("Usage: gal [DATE]\n")
+	fmt.Print("DATE is a date string, like yyyy-mm-dd\n")
+}
+
 func main() {
-	printCalendar()
+	if len(os.Args[1:]) == 0 {
+		printCalendar(time.Now())
+	} else if len(os.Args[1:]) == 1 {
+		arg := os.Args[1]
+		iso8081 := "2006-01-02"
+		time, err := time.Parse(iso8081, arg)
+		if err != nil {
+			panic(err)
+		}
+		printCalendar(time)
+	} else {
+		printUsage()
+	}
 }
